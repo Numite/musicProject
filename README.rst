@@ -1,6 +1,12 @@
-TODO
+Information
 ******************
 
+Installation
+===============
+* Text here
+
+TODO
+===============
 * Add a working skipped songs buffer than can be picked from
 
 Done
