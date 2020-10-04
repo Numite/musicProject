@@ -4,27 +4,46 @@ const config = require('./config.json');
 const ytdl = require('ytdl-core');
 const ytpl = require('ytpl');
 
+
+//  Prefix for commands
 const prefix = '--';
+
 //  ID of text channel the bot speaks in
-const txtChannel = '340879469722206208';
+const txtChannel = config.txtChannel;
+
+//  Users with admin permission of the bot. Users ID are stored in config.json for not disclosuring permanent ID's
+const adminPermission = [config.adm_USER1, config.adm_USER2, config.adm_USER3];
 
 //  Creating a new construct of the client and a map for the songs
 const client = new Discord.Client();
 const queue = new Map();
 
+// Creating an empty serverqueue
+const skippedQueue = {
+    songs: [],
+};
 // #endregion
 
 client.login(config.token);
+
+// Remember to test:
+//      The new queue limit added
+//      Test updated skip functionality
+//    Test the new unskip functionality
+
 
 //  Continously reading the messages in chat
 client.on('message', async message => {
     //  If the author is a bot
     if (message.author.bot) { return; }
-
     //  If no prefix, ignore message
     if (!message.content.startsWith(prefix)) { return; }
-    //  Checking if the user writes in the right channel
-    if (message.content.startsWith(prefix) && message.channel.id != txtChannel && message.content != '--shaking') { return message.reply(`Wrong channel, I only work in <#${txtChannel}>`); }
+
+    //  Checking if the user writes in the right channel, checks:
+    //  correct prefix, correct channel, admin permission
+    if (message.content.startsWith(prefix) && message.channel.id != txtChannel && !adminPermission.indexOf(message.author.id) && message.content != '--shaking') {
+         return message.reply(`Wrong channel, I only work in <#${txtChannel}>`);
+    }
 
     //  Splice prefix
     const commandBody = message.content.slice(prefix.length);
@@ -35,36 +54,73 @@ client.on('message', async message => {
     //  Setting all characters to lowercase
     const command = args.shift().toLowerCase();
 
-    //  Adding support for queuing of messages
+    // Creating a serverqueue
     const serverQueue = queue.get(message.guild.id);
 
     //  -----------------------------------------------------
     //                  Command lists
     //  -----------------------------------------------------
 
+    // If user is admin, first check this small command list
+    if(adminPermission.indexOf(message.author.id)) {
+
+        if(command == 'restart') {
+            if (serverQueue) {
+                serverQueue.songs = [];
+            }
+            if(skippedQueue) {
+                skippedQueue.songs = [];
+            }
+
+            await restart();
+            return;
+        }
+
+    }
     switch(command) {
-        case ('play' || 'spill'): {
+        case ('play'): {
         const songURL = args[0];
         //  This check returns a false for songs and a true for playlists
         const plCheck = ytpl.validateID(songURL);
 
         // Parses the song/playlist -url to a function that handles it
-        addSong(message, songURL, serverQueue, plCheck);
-
-        // Add check to check queue limit
+        await addSong(message, songURL, serverQueue, plCheck);
         break; }
 
     case 'skip': {
-        if (typeof args[0] === 'undefined') { skip(message, serverQueue, 1); }
-        else { skip(message, serverQueue, Math.round(args[0]));}
-        if(serverQueue) { client.channels.cache.get(txtChannel).send(`${serverQueue.songs.length - 1} songs are left in the queue.`);}
+        if (typeof args[0] === 'undefined') { skip(message, serverQueue, skippedQueue, 1); }
+        else { skip(message, serverQueue, skippedQueue, Math.round(args[0]));}
         break; }
+    case 'unskip': {
+
+        if(skippedQueue.songs.length == 0) {
+            client.channels.cache.get(txtChannel).send('There doesn\'t seem to be any songs skipped recently');
+        }
+        else if(typeof args[0] === 'undefined') {
+            let songSkippedlist = 'Here are the most recently skipped songs;';
+            for (let i = 0; i < skippedQueue.songs.length && i <= 4; i++) {
+                songSkippedlist += `,\n${i + 1}:   **${skippedQueue.songs[i].title}**`;
+            }
+
+            client.channels.cache.get(txtChannel).send(`${songSkippedlist}.\nUse --unskip "1-5" to indicate which song you want to add back to the queue.`);
+        }
+        else {
+            serverQueue.songs.splice(1, 0, skippedQueue.songs[ args[0] - 1 ]);
+            client.channels.cache.get(txtChannel).send(`**${serverQueue.songs[1].title}** was added to the first place in queue`);
+            }
+        break;
+    }
 
     case 'stop': { stop(message, serverQueue); break;}
+
     case 'list': { listSongs(serverQueue); break; }
-    case ('bug' || 'bugs'): {client.channels.cache.get(txtChannel).send('Report bugs here: (REF)'); break; }
+
+    case ('bug'): {client.channels.cache.get(txtChannel).send('Report bugs here: (REF)'); break; }
+
     case 'test': { console.log(prefix); break; }
-    case ('help' || 'commands') : {client.channels.cache.get(txtChannel).send('\
+
+    case ('help') : {
+    client.channels.cache.get(txtChannel).send('\
     Valid commands are: \
     \n--play "URL" (Plays the video or playlist link) \
     \n--list  (Lists the current song and up to the next 5 in queue)\
@@ -76,16 +132,18 @@ client.on('message', async message => {
     \n--play "URL" \
     \n--skip or -- skip "number" \
     \n--stop \
-    \nBug can be registered here: (REF)'); break; }
+    \n --restart (requires admin permission)\
+    \nBug and features can be noted here: (REF)'); break; }
     }
 });
 
 
 function listSongs(serverQueue) {
+    let listSongstxt = `Current Playing:  **${serverQueue.songs[0].title}**\n`;
 
-    let listSongstxt = `Current Playing:  **${serverQueue.songs[0].title}**`;
+    for (let i = 1; i < serverQueue.songs.length && i <= 5; i++) { listSongstxt += `,\n${i}:   **${serverQueue.songs[i].title}**`; }
+    listSongstxt += `\nThere are a total of ${serverQueue.songs.length - 1} songs queued`;
 
-    for (let i = 1; i < serverQueue.songs.length && i <= 5; i++) { listSongstxt += `,\n${i}:    **${serverQueue.songs[i].title}**`; }
     return client.channels.cache.get(txtChannel).send(`${listSongstxt}.`);
 }
 
@@ -96,15 +154,11 @@ async function addSong(message, songURL, serverQueue, plCheck) {
     const voiceChannel = message.member.voice.channel;
 
     //  Checking that the user calling the bot is in a voice channel
-    if (!voiceChannel) {
-        return client.channels.cache.get(txtChannel).send('You need to be in a voice channel to play music');
-    }
+    if (!voiceChannel) {return client.channels.cache.get(txtChannel).send('You need to be in a voice channel to play music');}
 
     // Permission Check
     const permission = voiceChannel.permissionsFor(message.client.user);
-    if (!permission.has('CONNECT') || !permission.has('SPEAK')) {
-        return client.channels.cache.get(txtChannel).send('I need permission to both connect AND speak in the channel');
-    }
+    if (!permission.has('CONNECT') || !permission.has('SPEAK')) {return client.channels.cache.get(txtChannel).send('I need permission to both connect AND speak in the channel');}
 
     // If there is NO queue and adding song do
     if (!serverQueue && !plCheck) {
@@ -141,7 +195,7 @@ async function addSong(message, songURL, serverQueue, plCheck) {
             queue.delete(message.guild.id);
             return message.channel.send(err);
         }
-    }
+}
     // If there is NO queue and adding playlist
     else if (!serverQueue && plCheck) {
         const queueContruct = {
@@ -196,7 +250,18 @@ async function addSong(message, songURL, serverQueue, plCheck) {
             };
             serverQueue.songs.push(songpl);
         }
-        client.channels.cache.get(txtChannel).send(`${serverQueue.songs.length - prevSongsLength}/${listLength} Songs was successfully added to the queue!`);
+
+         //  This block checks the number of songs. It does not need to be used anywhere else as ...
+         //  this is the only place playlists are added when the serverqueue exists. 151 songs is fine in the queue so it is skipped for the other blocks
+         if(serverQueue.songs.length > 150) {
+            const prevQueueLength = serverQueue.songs.length;
+            serverQueue.songs.splice(150);
+
+            return client.channels.cache.get(txtChannel).send(`Maximum of 150 songs are allowed in the queue, removed ${prevQueueLength - serverQueue.songs.length} songs from the list.`);
+        }
+        else {
+            return client.channels.cache.get(txtChannel).send(`${serverQueue.songs.length - prevSongsLength}/${listLength} Songs was successfully added to the queue!`);
+        }
     }
     // If there is queque and adding song
     else {
@@ -206,6 +271,7 @@ async function addSong(message, songURL, serverQueue, plCheck) {
             url: songInfo.videoDetails.video_url,
         };
         serverQueue.songs.push(song);
+
         return client.channels.cache.get(txtChannel).send(`${song.title} has been added to the queue!`);
     }
 }
@@ -230,25 +296,31 @@ function play(server, song) {
 }
 
 
-function skip(message, serverQueue, skipNR) {
+function skip(message, serverQueue, skippedSongs, skipNR) {
     if (!message.member.voice.channel) {
-        return client.channels.cache.get(txtChannel).send('You have to be in a voice channel to skip the music!');
+        return client.channels.cache.get(txtChannel).send('You have to be in the voice channel to skip the music!');
     }
     if (!serverQueue) {
-        return client.channels.cache.get(txtChannel).send('There is no song that I could skip!');
+        return client.channels.cache.get(txtChannel).send('There are no songs to skip!');
     }
+    else { client.channels.cache.get(txtChannel).send(`${serverQueue.songs.length - skipNR} songs are left in the queue.`); }
 
+    skippedSongs.songs.unshift(serverQueue.songs[0]);
     for (let i = 1; i < skipNR; i++) {
         serverQueue.songs.shift();
+        skippedSongs.songs.unshift(serverQueue.songs[0]);
     }
+
+    if(skippedSongs.songs.length > 5) { skippedSongs.songs.splice(5); }
+
     serverQueue.connection.dispatcher.end();
+    return skippedSongs;
+
 }
 
 
 function stop(message, serverQueue) {
-    if (!message.member.voice.channel) {
-        return client.channels.cache.get(txtChannel).send('You have to be in a voice channel to stop the music!');
-    }
+    if (!message.member.voice.channel) { return client.channels.cache.get(txtChannel).send('You have to be in the voice channel to stop the music!');}
     if (serverQueue) {
         serverQueue.songs = [];
     }
@@ -256,3 +328,11 @@ function stop(message, serverQueue) {
 }
 
 // #endregion
+
+async function restart() {
+    client.channels.cache.get(txtChannel).send('Restarting, emptying queue and closing connection...');
+    await client.destroy();
+    await client.login(config.token);
+
+    client.channels.cache.get(txtChannel).send('Restart complete...!');
+}

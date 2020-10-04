@@ -17,6 +17,13 @@ TODO
 --------------------
 * Add a working skipped songs buffer than can be picked from
 * Auto leave the bot after 5 minutes of no activity, after song ended.
+* Add max limit for songs in queue, for RAM usage reason
+* Make it searchable if input string is not youtube url
+* Add status what/if the bot is playing music
+* Add feedback and bug doc
+* Fix all wanky for-loops to remove and add N songs. It works but it's janky code
+
+
 
 Changelog
 --------------------
@@ -24,7 +31,7 @@ Changelog
     * Updated play function to support playing playlists
     * Cleaned up a lot of the bugs
     * Added more bugs for later
-    * Adsed a function to list the current songs and up the 5 next songs
+    * Added a function to list the current songs and up the 5 next songs
 
 * V1.0
     * Started project. Added play, skip, stop functions.
