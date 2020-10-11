@@ -12,21 +12,27 @@ Features
 --------------------
 * Play both songs and playlists. List current and up to 5 next songs. Skip/stop the bot.
 * Can be set up to respon in spesific channel.
+* Seach youtube video using the discord chat
 
 TODO
 --------------------
-* Add a working skipped songs buffer than can be picked from
 * Auto leave the bot after 5 minutes of no activity, after song ended.
-* Add max limit for songs in queue, for RAM usage reason
-* Make it searchable if input string is not youtube url
 * Add status what/if the bot is playing music
 * Add feedback and bug doc
-* Fix all wanky for-loops to remove and add N songs. It works but it's janky code
+* Fix all wanky for-loops to remove and add N songs. It works but it's janky code.
+* Move all code from main loops to dedicated functions.
 
 
 
 Changelog
 --------------------
+
+* V1.2
+    * Added a skiped-songs queue so that a mistake skip can be undone
+    * Added a 150 max songs in queue so that infinity or close to it songs can be Added
+    * Added a restart function which clears all structs and resets the connection
+    * Added search for youtube songs when not entering youtube url as input
+
 * V1.1 
     * Updated play function to support playing playlists
     * Cleaned up a lot of the bugs

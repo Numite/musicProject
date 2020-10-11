@@ -81,9 +81,12 @@ client.on('message', async message => {
                     searchQueue.title = [];
                     searchQueue.url = [];
                 }
-    
-                await restart();            
-        break; }
+
+                client.user.setActivity('nothing.');
+
+                await restart();
+                return;            
+                }
         case ('play'): {
 
         if(ytdl.validateURL(args[0])) {
@@ -156,7 +159,9 @@ client.on('message', async message => {
 
     case ('bug'): {client.channels.cache.get(txtChannel).send('Report bugs here: (REF)'); break; }
 
-    case 'test': { console.log(prefix); break; }
+    case 'test': { 
+
+        break; }
 
     case ('help') : {
     client.channels.cache.get(txtChannel).send('\
@@ -325,9 +330,12 @@ function play(server, song) {
         return;
     }
 
+    client.user.setActivity(song.title);
+    
     const dispatcher = serverQueue.connection.play(ytdl(song.url, { quality: 'highestaudio', highWaterMark: 1 << 25 })).on('finish', () => {
         serverQueue.songs.shift();
         play(server, serverQueue.songs[0]);
+
     }).on('error', error => console.error(error));
 
     dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
@@ -353,6 +361,7 @@ function skip(message, serverQueue, skippedSongs, skipNR) {
     if(skippedSongs.songs.length > 5) { skippedSongs.songs.splice(5); }
 
     serverQueue.connection.dispatcher.end();
+    client.user.setActivity('nothing.');
     return skippedSongs;
 
 }
@@ -363,6 +372,7 @@ function stop(message, serverQueue) {
     if (serverQueue) {
         serverQueue.songs = [];
     }
+    client.user.setActivity('nothing.');
     serverQueue.connection.dispatcher.end();
 }
 
