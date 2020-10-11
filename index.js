@@ -3,7 +3,7 @@ const Discord = require('discord.js');
 const config = require('./config.json');
 const ytdl = require('ytdl-core');
 const ytpl = require('ytpl');
-
+const yts = require('yt-search');
 
 //  Prefix for commands
 const prefix = '--';
@@ -22,6 +22,13 @@ const queue = new Map();
 const skippedQueue = {
     songs: [],
 };
+
+const searchQueue = {
+    title: [],
+    url: [],
+    songLength: [],
+};
+
 // #endregion
 
 client.login(config.token);
@@ -61,30 +68,62 @@ client.on('message', async message => {
     //                  Command lists
     //  -----------------------------------------------------
 
-    // If user is admin, first check this small command list
-    if(adminPermission.indexOf(message.author.id)) {
-
-        if(command == 'restart') {
-            if (serverQueue) {
-                serverQueue.songs = [];
-            }
-            if(skippedQueue) {
-                skippedQueue.songs = [];
-            }
-
-            await restart();
-            return;
-        }
-
-    }
     switch(command) {
+        case ('restart'): {
+                if (serverQueue) {
+                    serverQueue.songs = [];
+                }
+                if(skippedQueue) {
+                    skippedQueue.songs = [];
+                }
+                if(searchQueue) {
+                    searchQueue.songLength = [];
+                    searchQueue.title = [];
+                    searchQueue.url = [];
+                }
+    
+                await restart();            
+        break; }
         case ('play'): {
-        const songURL = args[0];
-        //  This check returns a false for songs and a true for playlists
-        const plCheck = ytpl.validateID(songURL);
 
-        // Parses the song/playlist -url to a function that handles it
-        await addSong(message, songURL, serverQueue, plCheck);
+        if(ytdl.validateURL(args[0])) {
+            const songURL = args[0];
+
+             //  This check returns a false for songs and a true for playlists
+             const plCheck = ytpl.validateID(songURL);
+
+             // Parses the song/playlist -url to a function that handles it
+             await addSong(message, songURL, serverQueue, plCheck);
+        }
+        else if(!isNaN(args[0]))
+        {
+            const songNumber = args[0] - 1;
+            // Parses the song/playlist -url to a function that handles it
+            await addSong(message, searchQueue.url[songNumber], serverQueue, 0);
+            // Emptying information and writing new information to it
+            searchQueue.title = [];
+            searchQueue.url = [];
+            searchQueue.songLength = [];
+        }
+        else {
+            let searchResult = (await yts(args.join(' '))).videos;
+
+            if(!searchResult.length)
+            {
+                client.channels.cache.get(txtChannel).send('No songs where found.');
+            }
+            else {
+                searchResult.length = 5;
+                let listResultstxt = 'Use --play 1-5 to select song';
+                for(let i = 0; i < 5; i++) {
+                    searchQueue.title.push(searchResult[i].title);
+                    searchQueue.url.push(searchResult[i].url);
+                    searchQueue.songLength.push(searchResult[i].duration.timestamp); 
+                    listResultstxt += `\n[${i+1}] ${searchResult[i].title} (${searchResult[i].duration.timestamp})`
+                }
+                client.channels.cache.get(txtChannel).send(listResultstxt);
+            }
+        }
         break; }
 
     case 'skip': {
@@ -195,7 +234,7 @@ async function addSong(message, songURL, serverQueue, plCheck) {
             queue.delete(message.guild.id);
             return message.channel.send(err);
         }
-}
+    }
     // If there is NO queue and adding playlist
     else if (!serverQueue && plCheck) {
         const queueContruct = {
