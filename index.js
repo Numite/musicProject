@@ -85,7 +85,7 @@ client.on('message', async message => {
                 client.user.setActivity('nothing.');
 
                 await restart();
-                return;            
+                return;
                 }
         case ('play'): {
 
@@ -98,8 +98,7 @@ client.on('message', async message => {
              // Parses the song/playlist -url to a function that handles it
              await addSong(message, songURL, serverQueue, plCheck);
         }
-        else if(!isNaN(args[0]))
-        {
+        else if(!isNaN(args[0])) {
             const songNumber = args[0] - 1;
             // Parses the song/playlist -url to a function that handles it
             await addSong(message, searchQueue.url[songNumber], serverQueue, 0);
@@ -109,10 +108,9 @@ client.on('message', async message => {
             searchQueue.songLength = [];
         }
         else {
-            let searchResult = (await yts(args.join(' '))).videos;
+            const searchResult = (await yts(args.join(' '))).videos;
 
-            if(!searchResult.length)
-            {
+            if(!searchResult.length) {
                 client.channels.cache.get(txtChannel).send('No songs where found.');
             }
             else {
@@ -121,8 +119,8 @@ client.on('message', async message => {
                 for(let i = 0; i < 5; i++) {
                     searchQueue.title.push(searchResult[i].title);
                     searchQueue.url.push(searchResult[i].url);
-                    searchQueue.songLength.push(searchResult[i].duration.timestamp); 
-                    listResultstxt += `\n[${i+1}] ${searchResult[i].title} (${searchResult[i].duration.timestamp})`
+                    searchQueue.songLength.push(searchResult[i].duration.timestamp);
+                    listResultstxt += `\n[${i + 1}] ${searchResult[i].title} (${searchResult[i].duration.timestamp})`;
                 }
                 client.channels.cache.get(txtChannel).send(listResultstxt);
             }
@@ -159,7 +157,7 @@ client.on('message', async message => {
 
     case ('bug'): {client.channels.cache.get(txtChannel).send('Report bugs here: (REF)'); break; }
 
-    case 'test': { 
+    case 'test': {
 
         break; }
 
@@ -331,7 +329,7 @@ function play(server, song) {
     }
 
     client.user.setActivity(song.title);
-    
+
     const dispatcher = serverQueue.connection.play(ytdl(song.url, { quality: 'highestaudio', highWaterMark: 1 << 25 })).on('finish', () => {
         serverQueue.songs.shift();
         play(server, serverQueue.songs[0]);
