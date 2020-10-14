@@ -29,9 +29,9 @@ Changelog
 
 * V1.2
     * Added a skiped-songs queue so that a mistake skip can be undone
-    * Added a 150 max songs in queue so that infinity or close to it songs can be Added
+    * Added a 150 max songs in queue 
     * Added a restart function which clears all structs and resets the connection
-    * Added search for youtube songs when not entering youtube url as input
+    * Added youtube search into the bot directly
 
 * V1.1 
     * Updated play function to support playing playlists
