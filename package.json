@@ -1,6 +1,6 @@
 {
   "name": "musicproject",
-  "version": "1.0.0",
+  "version": "1.2",
   "description": "Music bot for private servers",
   "main": "index.js",
   "dependencies": {
