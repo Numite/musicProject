@@ -70,20 +70,6 @@ client.on('message', async message => {
 
     switch(command) {
         case ('restart'): {
-                if (serverQueue) {
-                    serverQueue.songs = [];
-                }
-                if(skippedQueue) {
-                    skippedQueue.songs = [];
-                }
-                if(searchQueue) {
-                    searchQueue.songLength = [];
-                    searchQueue.title = [];
-                    searchQueue.url = [];
-                }
-
-                client.user.setActivity('nothing.');
-
                 await restart();
                 return;
                 }
@@ -377,9 +363,26 @@ function stop(message, serverQueue) {
 // #endregion
 
 async function restart() {
-    client.channels.cache.get(txtChannel).send('Restarting, emptying queue and closing connection...');
-    await client.destroy();
-    await client.login(config.token);
 
-    client.channels.cache.get(txtChannel).send('Restart complete...!');
+    skippedQueue.songs = [];
+    searchQueue.songLength = [];
+    searchQueue.title = [];
+    searchQueue.url = [];
+
+    client.user.setActivity('nothing.');
+
+    client.channels.cache.get(txtChannel).send('Restarting, emptying queue and closing connection...')
+    .then(
+        await client.destroy(),
+        console.log('1111'))
+    .then(
+        await client.login(config.token),
+        console.log('2222'))
+    .then((message) =>{
+        message.edit('Restart Complete!');
+        console.log('3333');
+    })
+    .catch(() =>{
+        console.error('Restart Failed');
+    });
 }
