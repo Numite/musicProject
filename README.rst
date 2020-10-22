@@ -18,26 +18,27 @@ TODO
 --------------------
 * Auto leave the bot after 5 minutes of no activity, after song ended.
 * Add status what/if the bot is playing music
-* Add feedback and bug doc
 * Fix all wanky for-loops to remove and add N songs. It works but it's janky code.
 * Move all code from main loops to dedicated functions.
-
-
+* Add a version command
 
 Changelog
 --------------------
 
+* V1.3
+    1. Added timer to restart function and .then() nesting to ensure execution order
+    
 * V1.2
-    * Added a skiped-songs queue so that a mistake skip can be undone
-    * Added a 150 max songs in queue 
-    * Added a restart function which clears all structs and resets the connection
-    * Added youtube search into the bot directly
+    1. Added a skiped-songs queue so that a mistake skip can be undone
+    #. Added a 150 max songs in queue 
+    #. Added a restart function which clears all structs and resets the connection
+    #. Added youtube search into the bot directly
 
 * V1.1 
-    * Updated play function to support playing playlists
-    * Cleaned up a lot of the bugs
-    * Added more bugs for later
-    * Added a function to list the current songs and up the 5 next songs
+    1. Updated play function to support playing playlists
+    #. Cleaned up a lot of the bugs
+    #. Added more bugs for later
+    #. Added a function to list the current songs and up the 5 next songs
 
 * V1.0
     * Started project. Added play, skip, stop functions.

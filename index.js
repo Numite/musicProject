@@ -18,6 +18,8 @@ const adminPermission = [config.adm_USER1, config.adm_USER2, config.adm_USER3];
 const client = new Discord.Client();
 const queue = new Map();
 
+// #endregion
+
 // Creating an empty serverqueue
 const skippedQueue = {
     songs: [],
@@ -29,22 +31,18 @@ const searchQueue = {
     songLength: [],
 };
 
-// #endregion
-
 client.login(config.token);
 
-// Remember to test:
-//      The new queue limit added
-//      Test updated skip functionality
-//    Test the new unskip functionality
+// On ready-event
+client.on('ready', () => {
+    client.user.setActivity('nothing | --play');
+});
 
-
-//  Continously reading the messages in chat
+// On message-event
 client.on('message', async message => {
-    //  If the author is a bot
-    if (message.author.bot) { return; }
-    //  If no prefix, ignore message
-    if (!message.content.startsWith(prefix)) { return; }
+
+    //  If the author is a bot or no prefix, ignore
+    if (message.author.bot || !message.content.startsWith(prefix) ) { return; }
 
     //  Checking if the user writes in the right channel, checks:
     //  correct prefix, correct channel, admin permission
@@ -70,6 +68,7 @@ client.on('message', async message => {
 
     switch(command) {
         case ('restart'): {
+                if(serverQueue) {await queue.delete(queue);}
                 await restart();
                 return;
                 }
@@ -118,62 +117,108 @@ client.on('message', async message => {
         else { skip(message, serverQueue, skippedQueue, Math.round(args[0]));}
         break; }
     case 'unskip': {
+        unskip(serverQueue, args[0]);
+        break;}
 
-        if(skippedQueue.songs.length == 0) {
-            client.channels.cache.get(txtChannel).send('There doesn\'t seem to be any songs skipped recently');
-        }
-        else if(typeof args[0] === 'undefined') {
-            let songSkippedlist = 'Here are the most recently skipped songs;';
-            for (let i = 0; i < skippedQueue.songs.length && i <= 4; i++) {
-                songSkippedlist += `,\n${i + 1}:   **${skippedQueue.songs[i].title}**`;
-            }
+    case 'stop': {
+        stop(message, serverQueue);
+        break;}
 
-            client.channels.cache.get(txtChannel).send(`${songSkippedlist}.\nUse --unskip "1-5" to indicate which song you want to add back to the queue.`);
-        }
-        else {
-            serverQueue.songs.splice(1, 0, skippedQueue.songs[ args[0] - 1 ]);
-            client.channels.cache.get(txtChannel).send(`**${serverQueue.songs[1].title}** was added to the first place in queue`);
-            }
+    case 'list': {
+        listSongs(serverQueue);
+        break; }
+
+    case 'test': {
+        // Add commands here for testing
+    break; }
+
+    case 'help': {
+        listCommands(message);
         break;
     }
 
-    case 'stop': { stop(message, serverQueue); break;}
+    case 'shaking': {
+        easterEgg(message);
+        break;}
 
-    case 'list': { listSongs(serverQueue); break; }
-
-    case ('bug'): {client.channels.cache.get(txtChannel).send('Report bugs here: (REF)'); break; }
-
-    case 'test': {
-
-        break; }
-
-    case ('help') : {
-    client.channels.cache.get(txtChannel).send('\
-    Valid commands are: \
-    \n--play "URL" (Plays the video or playlist link) \
-    \n--list  (Lists the current song and up to the next 5 in queue)\
-    \n--skip or -- skip "number" (Skips the current song, alternatively say how many you want to skip) \
-    \n--stop (Stop the bot)'); break; }
-
-    case 'shaking': {message.channel.send('https://tenor.com/view/oh-omg-fish-gif-9720855'); break;}
-    default: { client.channels.cache.get(txtChannel).send('Command not recognized. Valid commands are: \
-    \n--play "URL" \
-    \n--skip or -- skip "number" \
-    \n--stop \
-    \n --restart (requires admin permission)\
-    \nBug and features can be noted here: (REF)'); break; }
+    default: {
+        client.channels.cache.get(txtChannel).send('Command not recognized');
+        listCommands();
+    break;}
     }
 });
 
+// #region re-written function
+
+async function restart() {
+
+    skippedQueue.songs = [];
+    searchQueue.songLength = [];
+    searchQueue.title = [];
+    searchQueue.url = [];
+
+    const t0 = new Date().getTime();
+
+    client.channels.cache.get(txtChannel).send('Restarting...')
+    .then(await client.destroy())
+    .then(await client.login(config.token))
+    .then((message) =>{
+        const t1 = new Date().getTime();
+        message.edit(`Restart Complete, it took ${(t1 - t0) / 1000}s.`);
+    })
+    .catch(err =>{console.log('Restart Failed', err);});
+
+    client.user.setActivity('nothing | --play.');
+}
+
+function listCommands() {
+    return client.channels.cache.get(txtChannel).send('\
+    Valid commands are: \
+    \n--play "URL" (Plays the video or playlist link) \
+    \n--list  (Lists the current song and up to the next 5 in queue)\
+    \n--skip or -- skip "number" (Skips the current song or the "number" of songs) \
+    \n--unskip (Adds the last skipped song back to queue)\
+    \n--stop (Stops the music)\
+    \n--restart (restarts the bot)');
+}
+
+function easterEgg(message) {
+    return message.channel.send('https://tenor.com/view/oh-omg-fish-gif-9720855');
+}
 
 function listSongs(serverQueue) {
-    let listSongstxt = `Current Playing:  **${serverQueue.songs[0].title}**\n`;
+    let listSongstxt;
 
-    for (let i = 1; i < serverQueue.songs.length && i <= 5; i++) { listSongstxt += `,\n${i}:   **${serverQueue.songs[i].title}**`; }
-    listSongstxt += `\nThere are a total of ${serverQueue.songs.length - 1} songs queued`;
+    if(!serverQueue) { listSongstxt = 'No song(s) found in queue'; }
+    else {
+        listSongstxt = `Current Playing:  **${serverQueue.songs[0].title}**\n`;
 
+        for (let i = 1; i < serverQueue.songs.length && i <= 5; i++) { listSongstxt += `\n${i}:   **${serverQueue.songs[i].title}**.`; }
+
+        listSongstxt += `\nThere are a total of ${serverQueue.songs.length - 1} songs in queue`;
+        }
     return client.channels.cache.get(txtChannel).send(`${listSongstxt}.`);
 }
+
+function unskip(serverQueue, arg) {
+    if(skippedQueue.songs.length == 0) {
+        return client.channels.cache.get(txtChannel).send('There doesn\'t seem to be any songs skipped recently');
+    }
+    else if(typeof arg == 'undefined') {
+        let skippedSongs = 'Here are the most recently skipped songs;';
+        for (let i = 0; i < skippedQueue.songs.length && i <= 4; i++) {
+            skippedSongs += `,\n${i + 1}:   **${skippedQueue.songs[i].title}**`;
+        }
+        return client.channels.cache.get(txtChannel).send(`${skippedSongs}.\nUse --unskip "1-5" to indicate which song you want to add back to the queue.`);
+    }
+    else if(arg <= skippedQueue.songs.length) {
+            serverQueue.songs.splice(1, 0, skippedQueue.songs[arg - 1 ]);
+            return client.channels.cache.get(txtChannel).send(`**${serverQueue.songs[1].title}** was added to the first place in queue`);
+        }
+
+}
+// #endregion
+
 
 //  Function for checking the existence of playing queue
 async function addSong(message, songURL, serverQueue, plCheck) {
@@ -304,7 +349,6 @@ async function addSong(message, songURL, serverQueue, plCheck) {
     }
 }
 
-
 //  #region play, pause, skip functions
 function play(server, song) {
     const serverQueue = queue.get(server.id);
@@ -362,27 +406,3 @@ function stop(message, serverQueue) {
 
 // #endregion
 
-async function restart() {
-
-    skippedQueue.songs = [];
-    searchQueue.songLength = [];
-    searchQueue.title = [];
-    searchQueue.url = [];
-
-    client.user.setActivity('nothing.');
-
-    client.channels.cache.get(txtChannel).send('Restarting, emptying queue and closing connection...')
-    .then(
-        await client.destroy(),
-        console.log('1111'))
-    .then(
-        await client.login(config.token),
-        console.log('2222'))
-    .then((message) =>{
-        message.edit('Restart Complete!');
-        console.log('3333');
-    })
-    .catch(() =>{
-        console.error('Restart Failed');
-    });
-}
