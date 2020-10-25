@@ -68,7 +68,10 @@ client.on('message', async message => {
 
     switch(command) {
         case ('restart'): {
-                if(serverQueue) {await queue.delete(queue);}
+                if(serverQueue) {
+                    serverQueue.songs = [];
+                    serverQueue.connection.dispatcher.end();
+                }
                 await restart();
                 return;
                 }
@@ -81,8 +84,8 @@ client.on('message', async message => {
                 const songNumber = args[0] - 1;
 
                 // Parses the song/playlist -url to a function that handles it
-                await addSong(message, searchQueue.url[songNumber], serverQueue);
-                searchQueue.url.length = 0;
+                await addSong(message, searchQueue.url[songNumber], serverQueue)
+                .then(searchQueue.url.length = 0);
             }
             else if((args.length > 1 || !['1', '2', '3', '4', '5'].includes(args[0])) && args.length >= 1) {
                 const searchTerm = args.join(' ');
@@ -289,14 +292,15 @@ async function addSong(message, songURL, serverQueue) {
                 url: songInfo.videoDetails.video_url,
             };
             serverQueue.songs.push(song);
+
+            if(serverQueue.connection) {
+                return client.channels.cache.get(txtChannel).send(`${song.title} has been added to the queue!`);
+            }
         }
-        catch(err) {
-            return console.log(err);
+        catch (err) {
+            console.log(err);
         }
 
-        if(serverQueue.connection) {
-            return client.channels.cache.get(txtChannel).send(`${song.title} has been added to the queue!`);
-        }
     }
     else{
         // Playlist information
