@@ -73,88 +73,57 @@ client.on('message', async message => {
                 return;
                 }
         case ('play'): {
+            if(ytdl.validateURL(args[0])) {
+                const songURL = args[0];
+                await addSong(message, songURL, serverQueue);
+            }
+            else if (!isNaN(args[0]) && searchQueue.url.length > 0) {
+                const songNumber = args[0] - 1;
 
-            
-        await addSong(message, args[0], serverQueue, plCheck);
-
-/*
-        if(ytdl.validateURL(args[0])) {
+                // Parses the song/playlist -url to a function that handles it
+                await addSong(message, searchQueue.url[songNumber], serverQueue);
+                searchQueue.url.length = 0;
+            }
+            else if((args.length > 1 || !['1', '2', '3', '4', '5'].includes(args[0])) && args.length >= 1) {
+                const searchTerm = args.join(' ');
+                await searchSong(searchTerm);
+            }
+            break; }
+        case 'skip': {
+            skip(message, serverQueue, args[0]);
+            break; }
+        case 'unskip': {
+            unskip(serverQueue, args[0]);
+            break;}
+        case 'stop': {
+            stop(message, serverQueue);
+            break;}
+        case 'list': {
+            listSongs(serverQueue);
+            break; }
+        case 'test': {
             const songURL = args[0];
-
-             //  This check returns a false for songs and a true for playlists
-             const plCheck = ytpl.validateID(songURL);
-
-             // Parses the song/playlist -url to a function that handles it
-             await addSong(message, songURL, serverQueue, plCheck);
-        }
-        else if(!isNaN(args[0])) {
-            const songNumber = args[0] - 1;
-            // Parses the song/playlist -url to a function that handles it
-            await addSong(message, searchQueue.url[songNumber], serverQueue, 0);
-            // Emptying information and writing new information to it
-            searchQueue.title = [];
-            searchQueue.url = [];
-            searchQueue.songLength = [];
-        }
-        else {
-            const searchResult = (await yts(args.join(' '))).videos;
-
-            if(!searchResult.length) {
-                client.channels.cache.get(txtChannel).send('No songs where found.');
-            }
-            else {
-                searchResult.length = 5;
-                let listResultstxt = 'Use --play 1-5 to select song';
-                for(let i = 0; i < 5; i++) {
-                    searchQueue.title.push(searchResult[i].title);
-                    searchQueue.url.push(searchResult[i].url);
-                    searchQueue.songLength.push(searchResult[i].duration.timestamp);
-                    listResultstxt += `\n[${i + 1}] ${searchResult[i].title} (${searchResult[i].duration.timestamp})`;
-                }
-                client.channels.cache.get(txtChannel).send(listResultstxt);
-            }
-        }
-        */
+            await addSong(message, songURL, serverQueue);
+            // Add commands here for testing
         break; }
+        case 'help': {
+            listCommands(message);
+            break;
+        }
+        case 'shaking': {
+            easterEgg(message);
+            break;}
 
-    case 'skip': {
-        skip(message, serverQueue, args[0]);
-        break; }
-    case 'unskip': {
-        unskip(serverQueue, args[0]);
+        default: {
+            client.channels.cache.get(txtChannel).send('Command not recognized');
+            listCommands();
         break;}
-
-    case 'stop': {
-        stop(message, serverQueue);
-        break;}
-
-    case 'list': {
-        listSongs(serverQueue);
-        break; }
-
-    case 'test': {
-        serverQueue.connection.dispatcher.end();
-        // Add commands here for testing
-    break; }
-
-    case 'help': {
-        listCommands(message);
-        break;
-    }
-
-    case 'shaking': {
-        easterEgg(message);
-        break;}
-
-    default: {
-        client.channels.cache.get(txtChannel).send('Command not recognized');
-        listCommands();
-    break;}
-    }
+        }
 });
 
 // #region re-written function
 
+// Restart Function
 async function restart() {
 
     skippedQueue.songs = [];
@@ -176,6 +145,7 @@ async function restart() {
     client.user.setActivity('nothing | --play.');
 }
 
+// Comand for listing the commands on the bot
 function listCommands() {
     return client.channels.cache.get(txtChannel).send('\
     Valid commands are: \
@@ -187,10 +157,12 @@ function listCommands() {
     \n--restart (restarts the bot)');
 }
 
+// Easter egs goes here
 function easterEgg(message) {
     return message.channel.send('https://tenor.com/view/oh-omg-fish-gif-9720855');
 }
 
+// Function for listing the next songs in queue
 function listSongs(serverQueue) {
     let listSongstxt;
 
@@ -205,6 +177,7 @@ function listSongs(serverQueue) {
     return client.channels.cache.get(txtChannel).send(`${listSongstxt}.`);
 }
 
+// Function for adding previously skipped songs back into queue
 function unskip(serverQueue, arg) {
     if(skippedQueue.songs.length == 0) {
         return client.channels.cache.get(txtChannel).send('There doesn\'t seem to be any songs skipped recently');
@@ -223,6 +196,7 @@ function unskip(serverQueue, arg) {
 
 }
 
+// Function for skipping songs
 function skip(message, serverQueue, skipNR) {
 
     if(typeof skipNR == 'undefined') {skipNR = 1;}
@@ -249,9 +223,34 @@ function skip(message, serverQueue, skipNR) {
     client.user.setActivity('nothing.');
 }
 
+// Function for searching for songs
+async function searchSong(message) {
 
+    const searchResult = (await yts(message)).videos;
+
+    // Clearing the previous search
+    searchQueue.title.length = 0;
+    searchQueue.url.length = 0;
+    searchQueue.songLength.length = 0;
+
+    if(!searchResult.length) {
+        return client.channels.cache.get(txtChannel).send('No songs found.');
+    }
+    else {
+        let listResultstxt = 'Use --play 1-5 to select song';
+        searchResult.length = 5;
+        for(let i = 0; i < searchResult.length; i++) {
+            searchQueue.title.push(searchResult[i].title);
+            searchQueue.url.push(searchResult[i].url);
+            searchQueue.songLength.push(searchResult[i].duration.timestamp);
+            listResultstxt += `\n[${i + 1}] ${searchResult[i].title} (${searchResult[i].duration.timestamp})`;
+        }
+
+        return client.channels.cache.get(txtChannel).send(listResultstxt);
+    }
+}
 //  Function for checking the existence of playing queue
-async function addSong(message, songURL, serverQueue, plCheck) {
+async function addSong(message, songURL, serverQueue) {
 
     //  Setting the voicechannel where the bot is called from
     const voiceChannel = message.member.voice.channel;
@@ -263,8 +262,11 @@ async function addSong(message, songURL, serverQueue, plCheck) {
     const permission = voiceChannel.permissionsFor(message.client.user);
     if (!permission.has('CONNECT') || !permission.has('SPEAK')) {return client.channels.cache.get(txtChannel).send('I need permission to both connect AND speak in the channel');}
 
-    // If there is NO queue and adding song do
-    if (!serverQueue && !plCheck) {
+    //  This check returns a false for songs and a true for playlists
+    const plCheck = ytpl.validateID(songURL);
+
+    // If there is NO queue add one
+    if (!serverQueue) {
         const queueContruct = {
             textChannel: message.channel,
             voiceChannel: voiceChannel,
@@ -274,48 +276,34 @@ async function addSong(message, songURL, serverQueue, plCheck) {
             playing: true,
         };
 
-        // Song information and saving it into a struct
-        const songInfo = await ytdl.getInfo(songURL);
-        const song = {
-            title: songInfo.videoDetails.title,
-            url: songInfo.videoDetails.video_url,
-        };
-
-        // Setting the queue using our contract
+        // Setting the queue and re-assigning the variable serverQueue
         queue.set(message.guild.id, queueContruct);
-
-        // Pushing the song to our songs array
-        queueContruct.songs.push(song);
-
-        // Try and catch block for playing the song
-        try {
-            const connection = await voiceChannel.join();
-            queueContruct.connection = connection;
-            play(message.guild, queueContruct.songs[0]);
+        serverQueue = queue.get(message.guild.id);
         }
-        catch (err) {
-            console.log(err);
-            queue.delete(message.guild.id);
-            return message.channel.send(err);
+
+    if(!plCheck) {
+        try {
+            const songInfo = await ytdl.getInfo(songURL);
+            const song = {
+                title: songInfo.videoDetails.title,
+                url: songInfo.videoDetails.video_url,
+            };
+            serverQueue.songs.push(song);
+        }
+        catch(err) {
+            return console.log(err);
+        }
+
+        if(serverQueue.connection) {
+            return client.channels.cache.get(txtChannel).send(`${song.title} has been added to the queue!`);
         }
     }
-    // If there is NO queue and adding playlist
-    else if (!serverQueue && plCheck) {
-        const queueContruct = {
-            textChannel: message.channel,
-            voiceChannel: voiceChannel,
-            connection: null,
-            songs: [],
-            volume: 5,
-            playing: true,
-        };
-
+    else{
         // Playlist information
         const playlistInfo = await ytpl(songURL);
-        const listLength = playlistInfo.items.length;
 
-        // Setting the queue using our contract
-        queue.set(message.guild.id, queueContruct);
+        const listLength = playlistInfo.items.length;
+        const prevSongsLength = serverQueue.songs.length;
 
         // Itterate trough every song
         for (let i = 0; i < listLength; i++) {
@@ -323,16 +311,16 @@ async function addSong(message, songURL, serverQueue, plCheck) {
                 title: playlistInfo.items[i].title,
                 url: playlistInfo.items[i].url_simple,
             };
-
-            // Pushing the song to our songs array
-            queueContruct.songs.push(song);
+            serverQueue.songs.push(song);
         }
-        client.channels.cache.get(txtChannel).send(`${queueContruct.songs.length}/${listLength} Songs was successfully added to the queue!`);
+        return client.channels.cache.get(txtChannel).send(`${serverQueue.songs.length - prevSongsLength}/${listLength} Songs was successfully added to the queue!`);
+    }
 
+    if(!serverQueue.connection) {
         try {
             const connection = await voiceChannel.join();
-            queueContruct.connection = connection;
-            play(message.guild, queueContruct.songs[0]);
+            serverQueue.connection = connection;
+            play(message.guild, serverQueue.songs[0]);
         }
         catch (err) {
             console.log(err);
@@ -340,48 +328,8 @@ async function addSong(message, songURL, serverQueue, plCheck) {
             return message.channel.send(err);
         }
     }
-    // If there is queque and adding playlist
-    else if (plCheck) {
-        const playlistInfo = await ytpl(songURL);
-        const listLength = playlistInfo.items.length;
-        const prevSongsLength = serverQueue.songs.length;
-        for (let i = 0; i < listLength; i++) {
-
-            const songpl = {
-                title: playlistInfo.items[i].title,
-                url: playlistInfo.items[i].url_simple,
-            };
-            serverQueue.songs.push(songpl);
-        }
-
-         //  This block checks the number of songs. It does not need to be used anywhere else as ...
-         //  this is the only place playlists are added when the serverqueue exists. 151 songs is fine in the queue so it is skipped for the other blocks
-         if(serverQueue.songs.length > 150) {
-            const prevQueueLength = serverQueue.songs.length;
-            serverQueue.songs.splice(150);
-
-            return client.channels.cache.get(txtChannel).send(`Maximum of 150 songs are allowed in the queue, removed ${prevQueueLength - serverQueue.songs.length} songs from the list.`);
-        }
-        else {
-            return client.channels.cache.get(txtChannel).send(`${serverQueue.songs.length - prevSongsLength}/${listLength} Songs was successfully added to the queue!`);
-        }
-    }
-    // If there is queque and adding song
-    else {
-        const songInfo = await ytdl.getInfo(songURL);
-        const song = {
-            title: songInfo.videoDetails.title,
-            url: songInfo.videoDetails.video_url,
-        };
-        serverQueue.songs.push(song);
-
-        return client.channels.cache.get(txtChannel).send(`${song.title} has been added to the queue!`);
-    }
 }
-
 // #endregion
-
-
 
 //  #region play, pause, skip functions
 function play(server, song) {
