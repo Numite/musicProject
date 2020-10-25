@@ -42,7 +42,7 @@ client.on('ready', () => {
 client.on('message', async message => {
 
     //  If the author is a bot or no prefix, ignore
-    if (message.author.bot || !message.content.startsWith(prefix) ) { return; }
+    if (message.author.bot || !message.content.startsWith(prefix)) { return; }
 
     //  Checking if the user writes in the right channel, checks:
     //  correct prefix, correct channel, admin permission
@@ -74,6 +74,10 @@ client.on('message', async message => {
                 }
         case ('play'): {
 
+            
+        await addSong(message, args[0], serverQueue, plCheck);
+
+/*
         if(ytdl.validateURL(args[0])) {
             const songURL = args[0];
 
@@ -110,11 +114,11 @@ client.on('message', async message => {
                 client.channels.cache.get(txtChannel).send(listResultstxt);
             }
         }
+        */
         break; }
 
     case 'skip': {
-        if (typeof args[0] === 'undefined') { skip(message, serverQueue, skippedQueue, 1); }
-        else { skip(message, serverQueue, skippedQueue, Math.round(args[0]));}
+        skip(message, serverQueue, args[0]);
         break; }
     case 'unskip': {
         unskip(serverQueue, args[0]);
@@ -129,6 +133,7 @@ client.on('message', async message => {
         break; }
 
     case 'test': {
+        serverQueue.connection.dispatcher.end();
         // Add commands here for testing
     break; }
 
@@ -217,7 +222,32 @@ function unskip(serverQueue, arg) {
         }
 
 }
-// #endregion
+
+function skip(message, serverQueue, skipNR) {
+
+    if(typeof skipNR == 'undefined') {skipNR = 1;}
+    else {skipNR = Math.round(skipNR);}
+
+    if (!message.member.voice.channel) { return client.channels.cache.get(txtChannel).send('You have to be in the voice channel to skip the music!');}
+    if (!serverQueue) { return client.channels.cache.get(txtChannel).send('There are no songs to skip!');}
+    else { client.channels.cache.get(txtChannel).send(`${serverQueue.songs.length - skipNR} songs are left in the queue.`); }
+
+    // Adding the current song to the unshift queue
+    skippedQueue.songs.unshift(serverQueue.songs[0]);
+
+    // Keep removing from play queue and add to the skipped queue
+    for (let i = 1; i < skipNR; i++) {
+        serverQueue.songs.shift();
+        skippedQueue.songs.unshift(serverQueue.songs[0]);
+    }
+
+    // Ensure a maximum skipped length queue of 5
+    if(skippedQueue.songs.length > 5) { skippedQueue.songs.length = 5; }
+
+    // Stopping the connection. Since play() is a recursive function more songs will play if there are more in queue
+    serverQueue.connection.dispatcher.end();
+    client.user.setActivity('nothing.');
+}
 
 
 //  Function for checking the existence of playing queue
@@ -349,10 +379,15 @@ async function addSong(message, songURL, serverQueue, plCheck) {
     }
 }
 
+// #endregion
+
+
+
 //  #region play, pause, skip functions
 function play(server, song) {
     const serverQueue = queue.get(server.id);
     if (!song) {
+        // Add check here for last song in queue and leave after 5 minutes?
         serverQueue.voiceChannel.leave();
         queue.delete(server.id);
         return;
@@ -368,30 +403,6 @@ function play(server, song) {
 
     dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
     serverQueue.textChannel.send(`Now playing: **${song.title}**`);
-}
-
-
-function skip(message, serverQueue, skippedSongs, skipNR) {
-    if (!message.member.voice.channel) {
-        return client.channels.cache.get(txtChannel).send('You have to be in the voice channel to skip the music!');
-    }
-    if (!serverQueue) {
-        return client.channels.cache.get(txtChannel).send('There are no songs to skip!');
-    }
-    else { client.channels.cache.get(txtChannel).send(`${serverQueue.songs.length - skipNR} songs are left in the queue.`); }
-
-    skippedSongs.songs.unshift(serverQueue.songs[0]);
-    for (let i = 1; i < skipNR; i++) {
-        serverQueue.songs.shift();
-        skippedSongs.songs.unshift(serverQueue.songs[0]);
-    }
-
-    if(skippedSongs.songs.length > 5) { skippedSongs.songs.splice(5); }
-
-    serverQueue.connection.dispatcher.end();
-    client.user.setActivity('nothing.');
-    return skippedSongs;
-
 }
 
 
