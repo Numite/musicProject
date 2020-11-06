@@ -339,6 +339,7 @@ async function addSong(message, songURL, serverQueue) {
 function play(server, song) {
     const serverQueue = queue.get(server.id);
     if (!song) {
+        client.user.setActivity('nothing | --play.');
         // Add check here for last song in queue and leave after 5 minutes?
         serverQueue.voiceChannel.leave();
         queue.delete(server.id);
