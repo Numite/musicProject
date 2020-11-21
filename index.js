@@ -76,9 +76,17 @@ client.on('message', async message => {
                 return;
                 }
         case ('play'): {
+
             if(ytdl.validateURL(args[0])) {
                 const songURL = args[0];
-                await addSong(message, songURL, serverQueue);
+
+                try {
+                    await addSong(message, songURL, serverQueue);
+                } catch (error) {
+                    console.error(error)
+                    client.channels.cache.get(txtChannel).send('There was an error with the song/playlist. Please make sure it is not blocked in Norway');
+                }
+
             }
             else if (!isNaN(args[0]) && searchQueue.url.length > 0) {
                 const songNumber = args[0] - 1;
@@ -105,8 +113,6 @@ client.on('message', async message => {
             listSongs(serverQueue);
             break; }
         case 'test': {
-            const songURL = args[0];
-            await addSong(message, songURL, serverQueue);
             // Add commands here for testing
         break; }
         case 'help': {
@@ -267,7 +273,7 @@ async function addSong(message, songURL, serverQueue) {
 
     //  This check returns a false for songs and a true for playlists
     const plCheck = ytpl.validateID(songURL);
-
+    
     // If there is NO queue add one
     if (!serverQueue) {
         const queueContruct = {
@@ -304,7 +310,15 @@ async function addSong(message, songURL, serverQueue) {
     }
     else{
         // Playlist information
-        const playlistInfo = await ytpl(songURL);
+
+        try {
+           const playlistInfo = await ytpl(songURL, function(err) {
+                if(err) throw err
+            });
+            } catch (err) {
+                console.log('That playlist didn\'t work')
+                throw err
+            } 
 
         const listLength = playlistInfo.items.length;
         const prevSongsLength = serverQueue.songs.length;
