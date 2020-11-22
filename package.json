@@ -1,7 +1,7 @@
 {
   "name": "musicproject",
   "version": "1.3.0",
-  "description": "Music bot for private servers",
+  "description": "Music bot for local hosting",
   "main": "index.js",
   "dependencies": {
     "@discordjs/opus": "^0.3.2",

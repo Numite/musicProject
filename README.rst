@@ -6,7 +6,11 @@ Musicbot that plays youtube: songs, playlists and livestreams. The bot can also 
 
 Installation
 --------------------
-* No installation support as of now. Packages used are listed in package.json
+.. code-block:: javascript
+    
+    npm install
+
+Packages used are in package.json
 
 Features
 --------------------
@@ -21,6 +25,8 @@ TODO
 * Fix all wanky for-loops to remove and add N songs. It works but it's janky code.
 * Move all code from main loops to dedicated functions.
 * Add a version command
+* Add catch for all errors
+
 
 Changelog
 --------------------
