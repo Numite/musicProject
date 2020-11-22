@@ -26,7 +26,7 @@ TODO
 * Move all code from main loops to dedicated functions.
 * Add a version command
 * Add catch for all errors
-
+* Fix dispatcher connection fix
 
 Changelog
 --------------------

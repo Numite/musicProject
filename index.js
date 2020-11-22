@@ -37,6 +37,7 @@ client.on('ready', () => {
 
 // On message-event
 client.on('message', async (message) => {
+
     //  If the author is a bot or no prefix, ignore
     if (message.author.bot || !message.content.startsWith(prefix)) { return; }
 
@@ -78,11 +79,12 @@ client.on('message', async (message) => {
                 try {
                     await addSong(message, songURL, serverQueue);
                 }
-                catch (error) {
-                    console.error(error);
-                    client.channels.cache.get(txtChannel).send('There was an error with the song/playlist. Please make sure the song or any of the songs in the playlist is blocked in Norway');
+                catch (err) {
+                    if(err.message == 'BlockedContent') {
+                        client.channels.cache.get(txtChannel).send('There was an error with the playlist. Please make sure none of the songs are blocked in Norway');
+                    }
+                    console.error(err);
                 }
-
             }
             else if (!isNaN(args[0]) && searchQueue.url.length > 0) {
                 const songNumber = args[0] - 1;
@@ -305,7 +307,7 @@ async function addSong(message, songURL, serverQueue) {
             console.log(err);
         }
     }
- else {
+    else {
         // Playlist information
 
         let playlistInfo;
@@ -314,8 +316,8 @@ async function addSong(message, songURL, serverQueue) {
             playlistInfo = await ytpl(songURL);
         }
         catch (err) {
-            console.log('That playlist didn\'t work. One or more of the songs is block in Norway');
-            throw err;
+            console.log('Internal: The playlist didn\'t work due to content blocked.');
+            throw new customError('BlockedContent');
         }
 
         const listLength = playlistInfo.items.length;
@@ -338,7 +340,7 @@ async function addSong(message, songURL, serverQueue) {
             serverQueue.connection = connection;
             play(message.guild, serverQueue.songs[0]);
         }
- catch (err) {
+    catch (err) {
             console.log(err);
             queue.delete(message.guild.id);
             return message.channel.send(err);
@@ -346,6 +348,11 @@ async function addSong(message, songURL, serverQueue) {
     }
 }
 // #endregion
+
+function customError(msg) {
+    const error = new Error(msg);
+    return error;
+  }
 
 //  #region play, pause, skip functions
 function play(server, song) {
