@@ -1,4 +1,4 @@
-//  #region Requirements & setup
+//  #region Requirements & Setup
 const Discord = require('discord.js');
 const ytdl = require('ytdl-core');
 const ytpl = require('ytpl');
@@ -17,7 +17,8 @@ const queue = new Map();
 
 // #endregion
 
-//  Creating an empty serverqueue
+// #region Creating skipped songs array and search array
+
 const skippedQueue = {
     songs: [],
 };
@@ -27,6 +28,8 @@ const searchQueue = {
     url: [],
     songLength: [],
 };
+
+//#endregion
 
 client.login(config.token);
 
@@ -41,14 +44,14 @@ client.on('message', async (message) => {
     //  If the author is a bot or no prefix, ignore
     if (message.author.bot || !message.content.startsWith(prefix)) { return; }
 
-    //  Checking if the user writes in the right channel, checks:
-    //  correct prefix, correct channel, admin permission
+    //  Checking if the user writes in the right channel, checks: correct prefix, correct channel, admin permission
     if (message.content.startsWith(prefix) && message.channel.id != txtChannel && message.content != '--shaking') {
         return message.reply(`Wrong channel, I only work in <#${txtChannel}>`);
     }
 
-    //  Splice prefix
-    const commandBody = message.content.slice(prefix.length);
+    //  Splice prefix and removing double spaces
+    let commandBody = message.content.slice(prefix.length);
+    commandBody = commandBody.replace(/\s\s+/g, ' ');
 
     //  Splitting message
     const args = commandBody.split(' ');
@@ -64,14 +67,15 @@ client.on('message', async (message) => {
     //  -----------------------------------------------------
 
     switch (command) {
+
         case ('restart'): {
             if (serverQueue) {
                 serverQueue.songs = [];
-                serverQueue.connection.dispatcher.end();
             }
             await restart();
             return;
         }
+
         case ('play'): {
             if (ytdl.validateURL(args[0])) {
                 const songURL = args[0];
@@ -117,6 +121,8 @@ client.on('message', async (message) => {
         }
         case 'test': {
             // Add commands here for testing
+
+
             break;
         }
         case 'help': {
@@ -154,7 +160,10 @@ async function restart() {
             const t1 = new Date().getTime();
             message.edit(`Restart Complete, it took ${(t1 - t0) / 1000}s.`);
         })
-        .catch((err) => { console.log('Restart Failed', err); });
+        .catch((err) => {
+            client.channels.cache.get(txtChannel).send('Restart Failed');
+            console.log('Restart Failed', err);
+        });
 
     client.user.setActivity('nothing | --play.');
 }
@@ -380,9 +389,9 @@ function stop(message, serverQueue) {
     if (!message.member.voice.channel) { return client.channels.cache.get(txtChannel).send('You have to be in the voice channel to stop the music!'); }
     if (serverQueue) {
         serverQueue.songs = [];
+        serverQueue.connection.dispatcher.end();
     }
-    client.user.setActivity('nothing.');
-    serverQueue.connection.dispatcher.end();
+    client.user.setActivity('nothing | --play.');
 }
 
 // #endregion
