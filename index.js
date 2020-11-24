@@ -83,19 +83,20 @@ client.on('message', async (message) => {
                     await addSong(message, songURL, serverQueue);
                 }
                 catch (err) {
-                    if(err.message == 'BlockedContent') {
-                        client.channels.cache.get(txtChannel).send('There was an error with the playlist. Please make sure none of the songs are blocked in Norway');
-                    }
+                    if(err.message == 'BlockedContent') { client.channels.cache.get(txtChannel).send('There was an error with the playlist. Please make sure none of the songs are blocked in Norway'); }
+
                     console.error(err);
                 }
             }
+            // If searched song was done and argument is a number
             else if (!isNaN(args[0]) && searchQueue.url.length > 0) {
                 const songNumber = args[0] - 1;
 
-                // Parses the song/playlist -url to a function that handles it
+                // Parses the song/playlist -url to a function that handles it and then removed all urls from search queue.
                 await addSong(message, searchQueue.url[songNumber], serverQueue)
                     .then(searchQueue.url.length = 0);
             }
+            // If ( number of arguments greater than 1 or doesn't start with 1-5) AND there is more than 1 argument.
             else if ((args.length > 1 || !['1', '2', '3', '4', '5'].includes(args[0])) && args.length >= 1) {
                 const searchTerm = args.join(' ');
                 await searchSong(searchTerm);
@@ -360,11 +361,10 @@ async function addSong(message, songURL, serverQueue) {
         }
     }
 }
-// #endregion
 
+// Function for returning custom error message that can be specifically handled where thrown
 function customError(msg) {
-    const error = new Error(msg);
-    return error;
+    return new Error(msg);
   }
 
 //  #region play, pause, skip functions
