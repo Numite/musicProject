@@ -1,8 +1,8 @@
 Information
 ******************
-The bot is built so that it can run on a raspberry pi 4 without any issues in terms of process power and with limited RAM usage. 
+A music bot so that songs can be played for all users simultaneously. Made for local hosting. Running on raspberry pi 4 without issues. 
 
-Musicbot that plays youtube: songs, playlists and livestreams. The bot can also list the current songs and up to the next 5 songs in queue, it can skip the current song or the N number of songs spesified by input. 
+The bot supports youtube songs, youtube playlists and audio from livestreams.
 
 Installation
 --------------------
@@ -14,9 +14,9 @@ Packages used are in package.json
 
 Features
 --------------------
-* Play both songs and playlists. List current and up to 5 next songs. Skip/stop the bot.
-* Can be set up to respon in spesific channel.
-* Seach youtube video using the discord chat
+* Play songs, playlists and audio from livestreams. List current and up to 5 next songs. Possible to add skipped songs back to queue. Skip/stop the bot.
+* Can be set up to respond only in specific channel.
+* Search youtube using the discord chat
 
 TODO
 --------------------
@@ -30,6 +30,9 @@ TODO
 
 Changelog
 --------------------
+
+* V1.3.5
+    1. Fixed issue where bot crashed during loading of playlist with removed/blocked/missing content.
 
 * V1.3
     1. Added timer to restart function and .then() nesting to ensure execution order
