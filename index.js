@@ -15,9 +15,8 @@ const txtChannel = config.txtChannel;
 const client = new Discord.Client();
 const queue = new Map();
 
-// #endregion
 
-// #region Creating skipped songs array and search array
+// Creating "skipped songs array" and "search array"
 
 const skippedQueue = {
     songs: [],
@@ -29,7 +28,7 @@ const searchQueue = {
     songLength: [],
 };
 
-//#endregion
+// #endregion
 
 client.login(config.token);
 
@@ -41,27 +40,29 @@ client.on('ready', () => {
 // On message-event
 client.on('message', async (message) => {
 
-    //  If the author is a bot or no prefix, ignore
+    // If the author is a bot or no prefix, ignore
     if (message.author.bot || !message.content.startsWith(prefix)) { return; }
 
-    //  Checking if the user writes in the right channel, checks: correct prefix, correct channel, admin permission
+    // Checking if the user writes in the right channel, checks: correct prefix, correct channel, admin permission
     if (message.content.startsWith(prefix) && message.channel.id != txtChannel && message.content != '--shaking') {
         return message.reply(`Wrong channel, I only work in <#${txtChannel}>`);
     }
 
-    //  Splice prefix and removing double spaces
+    // Splice prefix and removing double spaces
     let commandBody = message.content.slice(prefix.length);
     commandBody = commandBody.replace(/\s\s+/g, ' ');
 
-    //  Splitting message
+    // Splitting message
     const args = commandBody.split(' ');
 
-    //  Setting all characters to lowercase
+    // Setting all characters to lowercase
     const command = args.shift().toLowerCase();
 
     // Creating a serverqueue
     const serverQueue = queue.get(message.guild.id);
 
+    return client.channels.cache.get(txtChannel).send('Beep boop temporary dead :c');
+    
     //  -----------------------------------------------------
     //                  Command lists
     //  -----------------------------------------------------
@@ -84,51 +85,59 @@ client.on('message', async (message) => {
                     await addSong(message, songURL, serverQueue);
                 }
                 catch (err) {
-                    if(err.message == 'BlockedContent') {
-                        client.channels.cache.get(txtChannel).send('There was an error with the playlist. Please make sure none of the songs are blocked in Norway');
-                    }
+                    if(err.message == 'BlockedContent') { client.channels.cache.get(txtChannel).send('There was an error with the playlist. Please make sure none of the songs are blocked in Norway'); }
+
                     console.error(err);
                 }
             }
+            // If searched song was done and argument is a number
             else if (!isNaN(args[0]) && searchQueue.url.length > 0) {
                 const songNumber = args[0] - 1;
 
-                // Parses the song/playlist -url to a function that handles it
+                // Parses the song/playlist -url to a function that handles it and then removed all urls from search queue.
                 await addSong(message, searchQueue.url[songNumber], serverQueue)
                     .then(searchQueue.url.length = 0);
             }
+            // If ( number of arguments greater than 1 or doesn't start with 1-5) AND there is more than 1 argument.
             else if ((args.length > 1 || !['1', '2', '3', '4', '5'].includes(args[0])) && args.length >= 1) {
                 const searchTerm = args.join(' ');
                 await searchSong(searchTerm);
             }
             break;
         }
+
         case 'skip': {
             skip(message, serverQueue, args[0]);
             break;
         }
+
         case 'unskip': {
             unskip(serverQueue, args[0]);
             break;
         }
+
         case 'stop': {
             stop(message, serverQueue);
             break;
         }
+
         case 'list': {
             listSongs(serverQueue);
             break;
         }
+
         case 'test': {
             // Add commands here for testing
 
 
             break;
         }
+
         case 'help': {
             listCommands(message);
             break;
         }
+
         case 'shaking': {
             easterEgg(message);
             break;
@@ -141,8 +150,6 @@ client.on('message', async (message) => {
         }
     }
 });
-
-// #region re-written function
 
 // Restart Function
 async function restart() {
@@ -332,7 +339,7 @@ async function addSong(message, songURL, serverQueue) {
         const listLength = playlistInfo.items.length;
         const prevSongsLength = serverQueue.songs.length;
 
-        // Itterate trough every song
+        // Iterate trough every song
         for (let i = 0; i < listLength; i++) {
             const song = {
                 title: playlistInfo.items[i].title,
@@ -356,11 +363,10 @@ async function addSong(message, songURL, serverQueue) {
         }
     }
 }
-// #endregion
 
+// Function for returning custom error message that can be specifically handled where thrown
 function customError(msg) {
-    const error = new Error(msg);
-    return error;
+    return new Error(msg);
   }
 
 //  #region play, pause, skip functions
