@@ -34,7 +34,8 @@ client.login(config.token);
 
 // On ready-event
 client.on('ready', () => {
-    client.user.setActivity('nothing | --play');
+    //    client.user.setActivity('nothing | --play');
+    client.user.setActivity('Beep boop temporarily dead until saturday 05/12 :c');
 });
 
 // On message-event
