@@ -61,7 +61,7 @@ client.on('message', async (message) => {
     // Creating a serverqueue
     const serverQueue = queue.get(message.guild.id);
 
-    return client.channels.cache.get(txtChannel).send('Beep boop temporarily dead :c');
+    return client.channels.cache.get(txtChannel).send('Beep boop temporarily dead until saturday 05/12 :c');
     
     //  -----------------------------------------------------
     //                  Command lists
