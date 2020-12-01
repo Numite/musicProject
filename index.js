@@ -17,7 +17,6 @@ const queue = new Map();
 
 
 // Creating "skipped songs array" and "search array"
-
 const skippedQueue = {
     songs: [],
 };
@@ -34,8 +33,7 @@ client.login(config.token);
 
 // On ready-event
 client.on('ready', () => {
-    //    client.user.setActivity('nothing | --play');
-    client.user.setActivity('Beep boop temporarily dead until saturday 05/12 :c');
+    client.user.setActivity('nothing | --play');
 });
 
 // On message-event
@@ -62,7 +60,6 @@ client.on('message', async (message) => {
     // Creating a serverqueue
     const serverQueue = queue.get(message.guild.id);
 
-
     //  -----------------------------------------------------
     //                  Command lists
     //  -----------------------------------------------------
@@ -78,6 +75,7 @@ client.on('message', async (message) => {
         }
 
         case ('play'): {
+            // Check if valid youtube-URL
             if (ytdl.validateURL(args[0])) {
                 const songURL = args[0];
 
@@ -91,13 +89,18 @@ client.on('message', async (message) => {
                     console.error(err);
                 }
             }
-            // If searched song was done and argument is a number
+            // If argument is a number and there exists a searchqueue
             else if (!isNaN(args[0]) && searchQueue.url.length > 0) {
                 const songNumber = args[0] - 1;
 
                 // Parses the song/playlist -url to a function that handles it and then removed all urls from search queue.
+                try{
                 await addSong(message, searchQueue.url[songNumber], serverQueue)
                     .then(searchQueue.url.length = 0);
+                }
+                catch(err) {
+                    console.error(err);
+                }
             }
             // If ( number of arguments greater than 1 or doesn't start with 1-5) AND there is more than 1 argument.
             else if ((args.length > 1 || !['1', '2', '3', '4', '5'].includes(args[0])) && args.length >= 1) {
@@ -129,8 +132,6 @@ client.on('message', async (message) => {
 
         case 'test': {
             // Add commands here for testing
-            console.log(ytdl(args[0]));
-            // console.log(await ytdl.getBasicInfo(args[0]));
             break;
         }
 
@@ -183,8 +184,8 @@ function listCommands() {
     \n--play "URL" (Plays the video or playlist link) \
     \n--list  (Lists the current song and up to the next 5 in queue)\
     \n--skip or -- skip "number" (Skips the current song or the "number" of songs) \
-    \n--unskip (Adds the last skipped song back to queue)\
-    \n--stop (Stops the music)\
+    \n--unskip or --unskip "numbers" (Adds "number" skipped song back to queue)\
+    \n--stop (Stops the bot)\
     \n--restart (restarts the bot)');
 }
 
@@ -198,7 +199,7 @@ function listSongs(serverQueue) {
     let listSongstxt;
 
     if (!serverQueue) { listSongstxt = 'No song(s) found in queue'; }
- else {
+    else {
         listSongstxt = `Current Playing:  **${serverQueue.songs[0].title}**\n`;
 
         for (let i = 1; i < serverQueue.songs.length && i <= 5; i++) { listSongstxt += `\n${i}:   **${serverQueue.songs[i].title}**.`; }
@@ -229,7 +230,7 @@ function unskip(serverQueue, arg) {
 // Function for skipping songs
 function skip(message, serverQueue, skipNR) {
     if (typeof skipNR === 'undefined') { skipNR = 1; }
- else { skipNR = Math.round(skipNR); }
+    else { skipNR = Math.round(skipNR); }
 
     if (!message.member.voice.channel) { return client.channels.cache.get(txtChannel).send('You have to be in the voice channel to skip the music!'); }
     if (!serverQueue) { return client.channels.cache.get(txtChannel).send('There are no songs to skip!'); }
@@ -373,6 +374,7 @@ function customError(msg) {
 
 //  #region play, pause, skip functions
 function play(server, song) {
+
     const serverQueue = queue.get(server.id);
     if (!song) {
         client.user.setActivity('nothing | --play.');

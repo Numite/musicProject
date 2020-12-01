@@ -20,26 +20,20 @@ Features
 
 TODO
 --------------------
-* Fix all for-loops "to remove and add N songs". It works but it's bad code.
+* Add so that the bots stops after all users has left the channel.
 * Auto leave the bot after 5 minutes of no activity, after song ended.
-* Move all code from main loops to dedicated functions.
-* Add a version command
-* Add catch for critical errors
-* Fix dispatcher connection fix
-* Move all messages to chat into a function that is called upon
-
-Requires Testing
---------------------
-* Custom error message
-
 
 Changelog
 --------------------
+* 1.5
+    1. Added support for custom error messages so they can be handled by if() statements.
+    #. Added try/catch for most critical and common errors.
+    #. Fixed dispatcher connection fix on restart while not connected
+    #. Moved all code to dedicated functions
+    #. Fixed all unnecessary for()-loops that has alternative javascript functions
 
 * V1.4
     1. Added status of what the bot is playing.
-
-
 
 * V1.3.5
     1. Fixed issue where bot crashed during loading of playlist with removed/blocked/missing content.

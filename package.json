@@ -1,6 +1,6 @@
 {
   "name": "musicproject",
-  "version": "v1.3.5",
+  "version": "v1.4.0",
   "description": "Music bot for local hosting",
   "main": "index.js",
   "dependencies": {
