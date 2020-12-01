@@ -34,7 +34,8 @@ client.login(config.token);
 
 // On ready-event
 client.on('ready', () => {
-    client.user.setActivity('nothing | --play');
+    //    client.user.setActivity('nothing | --play');
+    client.user.setActivity('Beep boop temporarily dead until saturday 05/12 :c');
 });
 
 // On message-event
@@ -61,6 +62,7 @@ client.on('message', async (message) => {
     // Creating a serverqueue
     const serverQueue = queue.get(message.guild.id);
 
+
     //  -----------------------------------------------------
     //                  Command lists
     //  -----------------------------------------------------
@@ -83,7 +85,8 @@ client.on('message', async (message) => {
                     await addSong(message, songURL, serverQueue);
                 }
                 catch (err) {
-                    if(err.message == 'BlockedContent') { client.channels.cache.get(txtChannel).send('There was an error with the playlist. Please make sure none of the songs are blocked in Norway'); }
+                    if(err.message == 'BlockedContent') { client.channels.cache.get(txtChannel).send('There was an error with the playlist. Please make sure none of the songs are blocked in Norway.');}
+                    if(err.message == 'failedPlaySong') { client.channels.cache.get(txtChannel).send('*There was an error getting the song information, aborting...*');}
 
                     console.error(err);
                 }
@@ -126,8 +129,8 @@ client.on('message', async (message) => {
 
         case 'test': {
             // Add commands here for testing
-
-
+            console.log(ytdl(args[0]));
+            // console.log(await ytdl.getBasicInfo(args[0]));
             break;
         }
 
@@ -305,21 +308,22 @@ async function addSong(message, songURL, serverQueue) {
     }
 
     if (!plCheck) {
+        let songInfo;
         try {
-            const songInfo = await ytdl.getInfo(songURL);
-            const song = {
-                title: songInfo.videoDetails.title,
-                url: songInfo.videoDetails.video_url,
-            };
-            serverQueue.songs.push(song);
+            songInfo = await ytdl.getInfo(songURL);
+        }
+        catch (err) {
+            // Throw the error message, which is handled in the above-level
+            console.log('Internal; the songinfo was not found.');
+            throw new customError('failedPlaySong');
+        }
 
-            if (serverQueue.connection) {
-                return client.channels.cache.get(txtChannel).send(`${song.title} has been added to the queue!`);
-            }
-        }
- catch (err) {
-            console.log(err);
-        }
+        const song = {
+            title: songInfo.videoDetails.title,
+            url: songInfo.videoDetails.video_url };
+        serverQueue.songs.push(song);
+
+        if (serverQueue.connection) { return client.channels.cache.get(txtChannel).send(`${song.title} has been added to the queue!`); }
     }
     else {
         // Playlist information
