@@ -6,11 +6,11 @@ The bot supports youtube songs, youtube playlists and audio from livestreams.
 
 Installation
 --------------------
+* Download repository and run the command below when inside the folder:
+
 .. code-block:: javascript
     
     npm install
-
-Packages used are in package.json
 
 Features
 --------------------
@@ -21,7 +21,7 @@ Features
 TODO
 --------------------
 * Add so that the bots stops after all users has left the channel.
-* Auto leave the bot after 5 minutes of no activity, after song ended.
+* Auto leave the bot waits to leave until 5 minutes after last song ended.
 
 Changelog
 --------------------
@@ -34,12 +34,14 @@ Changelog
 
 * V1.4
     1. Added status of what the bot is playing.
+    #. Minor Bugfixes
+    #. Fixed major issue with node causing the bot to crash repeatedly
 
 * V1.3.5
     1. Fixed issue where bot crashed during loading of playlist with removed/blocked/missing content.
 
 * V1.3
-    1. Added timer to restart function and .then() nesting to ensure execution order
+    1. Added timer to restart function and nesting to ensure execution order
     
 * V1.2
     1. Added a skiped-songs queue so that a mistake skip can be undone
