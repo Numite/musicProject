@@ -1,6 +1,6 @@
 {
   "name": "musicproject",
-  "version": "v1.3.5",
+  "version": "v1.4.0",
   "description": "Music bot for local hosting",
   "main": "index.js",
   "dependencies": {
@@ -9,14 +9,14 @@
     "ffmpeg": "0.0.4",
     "fluent-ffmpeg": "^2.1.2",
     "nodemon": "^2.0.6",
-    "npm-check-updates": "^10.2.2",
+    "npm-check-updates": "^10.2.3",
     "opusscript": "0.0.7",
-    "yt-search": "^2.5.0",
-    "ytdl-core": "^4.1.1",
+    "yt-search": "^2.5.1",
+    "ytdl-core": "^4.1.4",
     "ytpl": "^1.0.1"
   },
   "devDependencies": {
-    "eslint": "^7.14.0",
+    "eslint": "^7.15.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-config-standard": "^16.0.2",
     "eslint-plugin-import": "^2.22.1",
