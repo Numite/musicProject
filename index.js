@@ -44,11 +44,12 @@ client.on('message', async (message) => {
 
     // Checking if the user writes in the right channel, checks: correct prefix, correct channel, admin permission
     if (message.content.startsWith(prefix) && message.channel.id != txtChannel && message.content != '--shaking') {
-        return message.reply(`Wrong channel, I only work in <#${txtChannel}>`);
+        return message.reply(`Wrong channel, I am configured to work in <#${txtChannel}>`);
     }
 
-    // Splice prefix and removing double spaces
+    // Splice prefix
     let commandBody = message.content.slice(prefix.length);
+    // Removing double spaces
     commandBody = commandBody.replace(/\s\s+/g, ' ');
 
     // Splitting message
@@ -75,16 +76,16 @@ client.on('message', async (message) => {
         }
 
         case ('play'): {
+
             // Check if valid youtube-URL
             if (ytdl.validateURL(args[0])) {
-                const songURL = args[0];
 
                 try {
-                    await addSong(message, songURL, serverQueue);
+                    await addSong(message, args[0], serverQueue);
                 }
                 catch (err) {
                     if(err.message == 'BlockedContent') { client.channels.cache.get(txtChannel).send('There was an error with the playlist. Please make sure none of the songs are blocked in Norway.');}
-                    if(err.message == 'FailedPlaySong') { client.channels.cache.get(txtChannel).send('*There was an error getting the song information, aborting...*');}
+                    if(err.message == 'FailedPlaySong') { client.channels.cache.get(txtChannel).send('Song failed to play, aborting...');}
 
                     console.error(err);
                 }
@@ -99,6 +100,7 @@ client.on('message', async (message) => {
                     .then(searchQueue.url.length = 0);
                 }
                 catch(err) {
+                    if(err.message == 'FailedPlaySong') { client.channels.cache.get(txtChannel).send('Song failed to play, aborting...');}
                     console.error(err);
                 }
             }
@@ -132,7 +134,6 @@ client.on('message', async (message) => {
 
         case 'test': {
             // Add commands here for testing
-            console.log(await yts(args.join(' ')));
             break;
         }
 
