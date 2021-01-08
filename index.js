@@ -8,9 +8,6 @@ const config = require('./config.json');
 //  Prefix for commands
 const prefix = '--';
 
-//  ID of text channel the bot speaks in
-const txtChannel = config.txtChannel;
-
 //  Creating a new construct of the client and a map for the songs
 const client = new Discord.Client();
 const queue = new Map();
