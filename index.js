@@ -278,6 +278,7 @@ async function play(guild, song) {
         play(guild, serverQueue.songs[0]);
     }).on('error', (error) => {
         console.error(error);
+        serverQueue.songs.shift();
         play(guild, serverQueue.songs[0]);
         // throw new Error(error);
         });
