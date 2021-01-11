@@ -22,6 +22,9 @@ TODO
 --------------------
 * Add so that the bots stops after all users has left the channel.
 * Auto leave the bot waits to leave until 5 minutes after last song ended.
+* Move all bot messages to dedicated function to make easier to answer message once multiple servers support is added
+* Eliminate the fact that the bot can only be used on x-channel, linked to point above.
+* Add support for multiple servers for the same bot
 
 Changelog
 --------------------
