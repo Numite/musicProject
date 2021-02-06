@@ -12,7 +12,7 @@ const {
 //  Creating a new construct of the client and a map for the songs
 const client = new Discord.Client();
 const queue = new Map();
-
+const defaultActivityString = 'nothing | --play.';
 
 // #endregion
 
@@ -21,7 +21,7 @@ client.login(token);
 
 // On ready-event
 client.on('ready', () => {
-    client.user.setActivity('nothing | --play');
+    client.user.setActivity(defaultActivityString);
 });
 
 // On message-event
@@ -59,14 +59,15 @@ client.on('message', async message => {
                     await playContent(message, args[0]);
                 }
                 catch (err) {
-                    if(err.message == 'BlockedContent') { client.channels.cache.get(txtChannel).send('There was an error with the playlist. Please make sure none of the songs are blocked or unavailable in Norway.');}
+                    if(err.message == 'BlockedContent') { client.channels.cache.get(txtChannel).send('There was an error with the playlist or songs in the playlist.');}
                     if(err.message == 'FailedPlaySong') { client.channels.cache.get(txtChannel).send('Song failed to play, aborting...');}
                     console.error(err);
                 }
 
             }
             else if (queue.get(message.guild.id) && !isNaN(args[0])) {
-                 // Getting the current serverqueue
+
+                // Getting the current serverqueue
                 const serverQueue = queue.get(message.guild.id);
 
                 const songNumber = args[0] - 1;
@@ -105,13 +106,13 @@ client.on('message', async message => {
             break;
         }
 
-        case 'list': {
+        case 'queue': case 'list': {
             listSongs(message, txtChannel, txtChannel);
             break;
         }
 
         case 'shaking': {
-            easterEgg();
+            easterEgg(txtChannel);
             break;
         }
 
@@ -250,11 +251,10 @@ async function searchSong(searchMSG, message, txtChannel) {
 function listCommands(txtChannel) {
     return client.channels.cache.get(txtChannel).send('\
     Valid commands are: \
-    \n--play "URL" (Plays the video or playlist link) \
-    \n--search "TEXT" (Searches youtube for songs)\
-    \n--list  (Lists the current song and up to the next 5 in queue)\
-    \n--skip or -- skip "number" (Skips the current song or the "number" of songs) \
-    \n--unskip or --unskip "numbers" (Adds "number" skipped song back to queue)\
+    \n--play "URL or Search Term" (Use a direct youtube url or search trough the bot) \
+    \n--list or --queue (Lists the current song and up to the next 5 in queue)\
+    \n--skip or --skip "number" (Skips the current song or the "number" of songs) \
+    \n--unskip or --unskip "numbers" (Skips 1 or the requested amount of songs)\
     \n--stop (Stops the bot)');
 }
 
@@ -264,7 +264,7 @@ async function play(guild, song) {
     const serverQueue = queue.get(guild.id);
 
     if (!song) {
-        client.user.setActivity('nothing | --play.');
+        client.user.setActivity(defaultActivityString);
         // Add check here for last song in queue and leave after 5 minutes?
         serverQueue.voiceChannel.leave();
         queue.delete(guild.id);
@@ -342,8 +342,8 @@ function customError(msg) {
   }
 
 // Easter eggs goes here
-function easterEgg(message) {
-    return message.channel.send('https://tenor.com/view/oh-omg-fish-gif-9720855');
+function easterEgg(txtChannel) {
+    client.channels.cache.get(txtChannel).send('You need to be in a voice channel to play music');
 }
 
 // Function for listing the next songs in queue
