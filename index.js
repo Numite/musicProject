@@ -85,7 +85,13 @@ client.on('message', async message => {
             // If ( number of arguments greater than 1 or doesn't start with 1-5) AND there is more than 1 argument.
             else if ((args.length > 1 || !['1', '2', '3', '4', '5'].includes(args[0])) && args.length >= 1) {
                 const searchTerm = args.join(' ');
-                await searchSong(searchTerm, message, txtChannel);
+                try {
+                    await searchSong(searchTerm, message, txtChannel);
+                }
+                    catch(err) {
+                        if(err.message == 'FailedSearch') {client.channels.cache.get(txtChannel).send('Search failed for unknown reasons.');}
+                        console.error(err);
+                }
             }
 
             break;
@@ -115,6 +121,11 @@ client.on('message', async message => {
             easterEgg(txtChannel);
             break;
         }
+
+        case 'test': {
+            // Empty block, used for testing. If code is here then it is just not deleted
+        }
+            break;
 
         default: {
             client.channels.cache.get(txtChannel).send('Command not recognized');
@@ -211,7 +222,14 @@ async function playContent(message, songURL) {
 // Function for searching for songs
 async function searchSong(searchMSG, message, txtChannel) {
 
-    const searchResult = (await yts(searchMSG)).videos;
+    let searchResult;
+    try {
+        searchResult = (await yts(searchMSG)).videos;
+    }
+    catch (err) {
+        console.log('Internal: The search didn\'t work.');
+        throw new customError('FailedSearch');
+    }
 
     //  Setting the voicechannel where the bot is called from
     const voiceChannel = message.member.voice.channel;
