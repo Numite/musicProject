@@ -301,7 +301,7 @@ async function play(guild, song) {
         // throw new Error(error);
         });
 
-    dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
+    dispatcher.setVolumeLogarithmic(serverQueue.volume / 10);
     serverQueue.textChannel.send(`Now playing: **${song.title}**`);
 }
 
