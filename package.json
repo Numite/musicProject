@@ -1,9 +1,10 @@
 {
   "name": "musicproject",
-  "version": "v1.5.2",
+  "version": "v1.6.0",
   "description": "Music bot for local hosting",
   "main": "index.js",
   "dependencies": {
+    "@discordjs/opus": "^0.5.0",
     "discord.js": "^12.5.3",
     "ffmpeg": "^0.0.4",
     "fluent-ffmpeg": "^2.1.2",
