@@ -14,6 +14,12 @@ Installation
     
     npm install
 
+Use code below to ensure a clean update, if updating.
+
+.. code-block:: javascript
+    
+    npm ci
+
 Features
 --------------------
 * Play songs, playlists and audio from livestreams. List current and up to 5 next songs. Possible to add skipped songs back to queue. Skip/stop the bot.
@@ -30,6 +36,7 @@ Changelog
 * 1.5.2
     1. Fixed bug related to search function of the bot. Added error handling for said bug.
     #. Updated all packages.
+    #. Fixed incompatibility with opus, discord/opus and nodejs.
 
 * 1.5
     1. Added support for custom error messages so they can be handled by if() statements.
