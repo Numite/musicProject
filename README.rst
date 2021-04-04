@@ -45,10 +45,12 @@ TODO
 
 Changelog
 --------------------
+* 1.6
+    1. Outdated opus version fixed and bot updated to 1.6
+
 * 1.5.2
     1. Fixed bug related to search function of the bot. Added error handling for said bug.
     #. Updated all packages.
-    #. Fixed incompatibility with opus, discord/opus and nodejs.
 
 * 1.5
     1. Added support for custom error messages so they can be handled by if() statements.
