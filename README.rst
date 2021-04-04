@@ -1,12 +1,14 @@
 Information
 ******************
-A music bot so that songs can be played for all users simultaneously. Made for local hosting. Running on raspberry pi 4 without issues. 
+A music bot so that songs can be played for all users simultaneously. Made for local hosting. Tested hosting on linux-based OS. 
 
-The bot supports youtube songs, youtube playlists and audio from livestreams.
+The bot supports youtube songs, youtube playlists and livestreams (link only).
+
+This project is mainly for having a bot that doesn't lag or compromises on audio quality. Built in javascript because I wanted to learn it.
 
 Installation
 --------------------
-* Download repository and run the command below when inside the folder:
+* Download repository from stable branch and run the command below when inside the folder:
 
 .. code-block:: javascript
     
@@ -15,19 +17,20 @@ Installation
 Features
 --------------------
 * Play songs, playlists and audio from livestreams. List current and up to 5 next songs. Possible to add skipped songs back to queue. Skip/stop the bot.
-* Can be set up to respond only in specific channel.
 * Search youtube using the discord chat
+* Using the bot on multiple serves with only 1 instance required. Performance depends on local hardware.
 
 TODO
 --------------------
 * Add so that the bots stops after all users has left the channel.
 * Auto leave the bot waits to leave until 5 minutes after last song ended.
-* Move all bot messages to dedicated function to make easier to answer message once multiple servers support is added
-* Eliminate the fact that the bot can only be used on x-channel, linked to point above.
-* Add support for multiple servers for the same bot
 
 Changelog
 --------------------
+* 1.5.2
+    1. Fixed bug related to search function of the bot. Added error handling for said bug.
+    #. Updated all packages.
+
 * 1.5
     1. Added support for custom error messages so they can be handled by if() statements.
     #. Added try/catch for most critical and common errors.
