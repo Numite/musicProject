@@ -6,6 +6,18 @@ The bot supports youtube songs, youtube playlists and livestreams (link only).
 
 This project is mainly for having a bot that doesn't lag or compromises on audio quality. Built in javascript because I wanted to learn it.
 
+Config-file
+-------------------
+Create a file called config.json and paste the following inside the file. The prefix can be chosen freely and the token is the token for your discord bot
+
+.. code-block:: javascript
+
+    {
+        "prefix": "--",
+        "token": "your-token-here"
+    }
+
+
 Installation
 --------------------
 * Download repository from stable branch and run the command below when inside the folder:
